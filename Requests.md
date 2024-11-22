@@ -17,6 +17,26 @@
  - 使用Github Desktop，打开当前项目
  - 先点击Fetch origin同步远端代码，以防远端代码与本地有冲突（若有冲突，则在本地修改到没有冲突再继续下一步）
  - 点击Current branch，新建一个分支
- - ![alt text](texture/mdpic/branch.png)
+&emsp;
+    ![alt text](texture/mdpic/branch.png)
+&emsp;
  - 接着在summery填写好这次提交的标题,然后点击下方Commit to xxxx
- - ![alt text](texture/mdpic/commit.png)
+&emsp;
+    ![alt text](texture/mdpic/commit.png)
+&emsp;
+ - 点击Push Origin
+&emsp;
+    ![alt text](texture/mdpic/push.png)
+&emsp;
+ - 打开Github，提交pull request,
+&emsp;
+    ![alt text](texture/mdpic/merge.png)
+&emsp;
+ - 检查分支和代码是否正确
+&emsp;
+    ![alt text](texture/mdpic/compare.png)
+&emsp;
+ - 提交合并申请
+&emsp;
+    ![alt text](texture/mdpic/request.png)
+&emsp;
