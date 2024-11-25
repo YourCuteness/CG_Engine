@@ -10,7 +10,7 @@
 
  -  在你自己的cpp中，假想此时路径在include文件夹，然后在你自己的文件头使用相对路径即可，这里举例`src/view_module/event.cpp`引用`include/module/judge.h`的情况
 
-![alt text](texture/mdpic/include.png)
+![alt text](material/mdpic/include.png)
 
 ## 3.如何提交代码
 
@@ -18,25 +18,29 @@
  - 先点击Fetch origin同步远端代码，以防远端代码与本地有冲突（若有冲突，则在本地修改到没有冲突再继续下一步）
  - 点击Current branch，新建一个分支
 &emsp;
-    ![alt text](texture/mdpic/branch.png)
+    ![alt text](material/mdpic/branch.png)
 &emsp;
  - 接着在summery填写好这次提交的标题,然后点击下方Commit to xxxx
 &emsp;
-    ![alt text](texture/mdpic/commit.png)
+    ![alt text](material/mdpic/commit.png)
 &emsp;
  - 点击Push Origin
 &emsp;
-    ![alt text](texture/mdpic/push.png)
+    ![alt text](material/mdpic/push.png)
 &emsp;
  - 打开Github，提交pull request,
 &emsp;
-    ![alt text](texture/mdpic/merge.png)
+    ![alt text](material/mdpic/merge.png)
 &emsp;
  - 检查分支和代码是否正确
 &emsp;
-    ![alt text](texture/mdpic/compare.png)
+    ![alt text](material/mdpic/compare.png)
 &emsp;
  - 提交合并申请
 &emsp;
-    ![alt text](texture/mdpic/request.png)
+    ![alt text](material/mdpic/request.png)
 &emsp;
+
+##  4.面向对象（11.25更新）
+
+ - 绘制类在window里面修改，模型类在model里面修改，底层物理层还未开始

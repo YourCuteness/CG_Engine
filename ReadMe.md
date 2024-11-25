@@ -8,4 +8,4 @@
 ## How to run the code (construct in windows by Ninja)
 
 - run the `build.bat`
-- run the `main.exe` in the newly created folder `build`
+- run the `run.bat`
