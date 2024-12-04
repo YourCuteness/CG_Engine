@@ -1,8 +1,35 @@
+#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <iostream>
+#include <vector>
+#include <string>
 #include <glm/glm.hpp>
-#include <model/model.h>
+#include <algorithm>  // for std::find_if
+#include <iterator>  // for std::distance
+
+
+class Model {
+public:
+    bool loadOBJ(const std::string &filePath);
+
+private:
+    void processFace(const std::vector<std::string> &face,
+                     const std::vector<glm::vec3> &positions,
+                     const std::vector<glm::vec3> &normals,
+                     const std::vector<glm::vec2> &texCoords);
+
+    struct Vertex {
+        glm::vec3 position;
+        glm::vec3 normal;
+        glm::vec2 texCoord;
+
+        Vertex(const glm::vec3 &pos, const glm::vec3 &norm, const glm::vec2 &tex)
+            : position(pos), normal(norm), texCoord(tex) {}
+    };
+
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+};
 
 bool Model::loadOBJ(const std::string &filePath)
 {
@@ -20,6 +47,11 @@ bool Model::loadOBJ(const std::string &filePath)
     std::string line;
     while (std::getline(file, line))
     {
+        // 忽略空行和注释
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
         std::istringstream iss(line);
         std::string token;
         iss >> token;
@@ -44,11 +76,26 @@ bool Model::loadOBJ(const std::string &filePath)
         }
         else if (token == "f")
         {
+            std::vector<std::string> temp;
             std::vector<std::string> face;
             std::string faceStr;
             while (iss >> faceStr)
-            {
-                face.push_back(faceStr);
+            {   
+                if (faceStr == "#") {
+                    break;
+                }
+                temp.push_back(faceStr);
+            }
+            if (temp.size() == 4) {
+                face.push_back(temp[0]);
+                face.push_back(temp[1]);
+                face.push_back(temp[2]);
+                face.push_back(temp[0]);
+                face.push_back(temp[2]);
+                face.push_back(temp[3]);
+            }
+            else {
+                face = temp;
             }
             processFace(face, positions, normals, texCoords);
         }
@@ -65,15 +112,72 @@ void Model::processFace(const std::vector<std::string> &face,
     for (const auto &facePart : face)
     {
         std::istringstream faceStream(facePart);
-        int vIndex, tIndex, nIndex;
-        char separator;
-        faceStream >> vIndex >> separator >> tIndex >> separator >> nIndex;
+        int vIndex = -1, tIndex = -1, nIndex = -1;
+        char separator1, separator2;
 
-        vIndex--; // OBJ 索引从 1 开始，调整为从 0 开始
-        tIndex--;
-        nIndex--;
+        // 解析顶点、纹理、法线索引
+        if (faceStream >> vIndex)
+        {
+            if (faceStream.peek() == '/')
+            {
+                faceStream >> separator1;  // 跳过分隔符 '/'
+                if (faceStream.peek() != '/')
+                {
+                    faceStream >> tIndex;  // 纹理索引
+                }
+                if (faceStream.peek() == '/')
+                {
+                    faceStream >> separator2;  // 跳过第二个 '/'
+                    faceStream >> nIndex;  // 法线索引
+                }
+            }
+            // 如果只有顶点
+            if (faceStream.eof() && tIndex == -1 && nIndex == -1)
+            {
+                tIndex = nIndex = -1;  // 设置默认值
+            }
+        }
 
-        vertices.push_back(Vertex(positions[vIndex], normals[nIndex], texCoords[tIndex]));
-        indices.push_back(static_cast<unsigned int>(vertices.size()) - 1);
+        // 对索引进行调整，因为OBJ文件中的索引是从1开始的，C++数组是从0开始的
+        if (vIndex > 0) vIndex--;
+        if (tIndex > 0) tIndex--;
+        if (nIndex > 0) nIndex--;
+
+        // 如果索引无效，跳过该面
+        if (vIndex < 0 || vIndex >= positions.size() ||
+            (tIndex >= 0 && tIndex >= texCoords.size()) ||
+            (nIndex >= 0 && nIndex >= normals.size()))
+        {
+            std::cerr << "Invalid face index in face part: " << facePart << std::endl;
+            continue;
+        }
+
+        // 构建一个顶点（位置、法线、纹理坐标）的组合
+        glm::vec3 norm = (nIndex >= 0) ? normals[nIndex] : glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec2 texCoord = (tIndex >= 0) ? texCoords[tIndex] : glm::vec2(0.0f, 0.0f);
+        Vertex vertex(positions[vIndex], norm, texCoord);
+
+        // 查找该顶点是否已存在
+        auto it = std::find_if(vertices.begin(), vertices.end(), [&](const Vertex &v) {
+            return v.position == vertex.position && v.normal == vertex.normal && v.texCoord == vertex.texCoord;
+        });
+
+        unsigned int index;
+        if (it != vertices.end()) {
+            // 如果顶点已经存在，获取该顶点的索引
+            index = static_cast<unsigned int>(std::distance(vertices.begin(), it));
+        } else {
+            // 如果顶点不存在，将其添加到 vertices 中，并获取新的索引
+            vertices.push_back(vertex);
+            index = static_cast<unsigned int>(vertices.size()) - 1;
+        }
+
+        // 将当前顶点的索引添加到 indices 中
+        indices.push_back(index);
+
+        //std::cout << "Number:" << static_cast<unsigned int>(vertices.size()) - 1 << std::endl;
+        //std::cout << "Vertex: " << positions[vIndex].x << " " << positions[vIndex].y << " " << positions[vIndex].z << std::endl;
+        //std::cout << "Normal: " << norm.x << " " << norm.y << " " << norm.z << std::endl;
+        //std::cout << "TexCoord: " << texCoord.x << " " << texCoord.y << std::endl;
     }
 }
