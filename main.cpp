@@ -8,7 +8,7 @@ int main()
     Window window(800, 600, "OpenGL OBJ Example");
 
     Model model1;
-    if (!model1.loadOBJ("../material/models/cube.obj"))
+    if (!model1.loadOBJ("../material/models/bunny.obj"))
     { // 请修改为你的 OBJ 文件路径
         std::cerr << "Failed to load model1" << std::endl;
         return -1;
