@@ -15,7 +15,7 @@ Window::Window(int width, int height, const char *title)
         std::cerr << "Failed to initialize GLFW" << std::endl;
         exit(1);
     }
-
+    _camera = new PerspectiveCamera(glm::radians(60.0f), 1.0f * width / height, 0.1f, 10000.0f);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -36,6 +36,11 @@ Window::Window(int width, int height, const char *title)
         glfwTerminate();
         exit(1);
     }
+
+    glfwSetWindowUserPointer(window, this);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetCursorPosCallback(window, cursorPosCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     initOpenGL();
 }
@@ -156,8 +161,8 @@ void Window::render()
 
     glUseProgram(shaderProgram);
 
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 view = _camera->getViewMatrix();
+    glm::mat4 projection = _camera->getProjectionMatrix();
 
     for (auto &model : models)
     {
@@ -183,6 +188,8 @@ void Window::processInput()
     {
         glfwSetWindowShouldClose(window, true);
     }
+
+    _camera->camera_control(window);
 }
 
 void Window::run()
@@ -210,4 +217,53 @@ std::string readShaderFile(const std::string &filePath)
     std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
     return content;
+}
+
+void Window::cursorPosCallback(GLFWwindow *window, double xPos, double yPos)
+{
+    Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    _window->_input.mouse.move.xNow = static_cast<float>(xPos);
+    _window->_input.mouse.move.yNow = static_cast<float>(yPos);
+}
+
+void Window::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
+{
+    Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    if (action == GLFW_PRESS)
+    {
+        switch (button)
+        {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            _window->_input.mouse.press.left = true;
+            break;
+        case GLFW_MOUSE_BUTTON_MIDDLE:
+            _window->_input.mouse.press.middle = true;
+            break;
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            _window->_input.mouse.press.right = true;
+            break;
+        }
+    }
+    else if (action == GLFW_RELEASE)
+    {
+        switch (button)
+        {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            _window->_input.mouse.press.left = false;
+            break;
+        case GLFW_MOUSE_BUTTON_MIDDLE:
+            _window->_input.mouse.press.middle = false;
+            break;
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            _window->_input.mouse.press.right = false;
+            break;
+        }
+    }
+}
+
+void Window::scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
+{
+    Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    _window->_input.mouse.scroll.xOffset = static_cast<float>(xOffset);
+    _window->_input.mouse.scroll.yOffset = static_cast<float>(yOffset);
 }
