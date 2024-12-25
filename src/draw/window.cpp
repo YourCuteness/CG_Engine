@@ -7,6 +7,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <model/model.h>
 #include <draw/window.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 Window::Window(int width, int height, const char *title)
 {
@@ -36,6 +39,16 @@ Window::Window(int width, int height, const char *title)
         glfwTerminate();
         exit(1);
     }
+
+    // init imGUI
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init();
 
     glfwSetWindowUserPointer(window, this);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
@@ -68,8 +81,8 @@ void Window::initOpenGL()
     glEnable(GL_DEPTH_TEST);
 
     // 读取着色器文件
-    std::string vertexShaderSource = readShaderFile("../material/shader/test.vert");
-    std::string fragmentShaderSource = readShaderFile("../material/shader/test.frag");
+    std::string vertexShaderSource = readShaderFile("../material/shader/basic_light.vert");
+    std::string fragmentShaderSource = readShaderFile("../material/shader/basic_light.frag");
 
     // 编译和链接着色器程序
     unsigned int vertexShader = compileShader(vertexShaderSource.c_str(), GL_VERTEX_SHADER);
@@ -156,7 +169,7 @@ void Window::setupMesh(Model &model)
 
 void Window::render()
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(_clearColor.r, _clearColor.g, _clearColor.b, _clearColor.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
@@ -167,7 +180,6 @@ void Window::render()
     for (auto &model : models)
     {
         glm::mat4 modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::rotate(modelMatrix, glm::radians((float)glfwGetTime() * 50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
         unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
@@ -180,6 +192,34 @@ void Window::render()
         glBindVertexArray(model->VAO);
         glDrawElements(GL_TRIANGLES, static_cast<int>(model->indices.size()), GL_UNSIGNED_INT, 0);
     }
+}
+
+void Window::renderUI()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    const auto flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
+
+    if (!ImGui::Begin("Control Panel", nullptr, flags))
+    {
+        ImGui::End();
+    }
+    else
+    {
+        ImGui::Checkbox("wireframe", &_wireframe);
+        ImGui::NewLine();
+        ImGui::SliderFloat("transparent", &lightIntensity, 0.0f, 1.0f);
+        ImGui::ColorEdit3("light color", (float *)&_lightColor);
+        ImGui::NewLine();
+        ImGui::ColorEdit3("background", (float *)&_clearColor);
+
+        ImGui::End();
+    }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Window::processInput()
@@ -199,6 +239,7 @@ void Window::run()
         processInput();
 
         render();
+        renderUI();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

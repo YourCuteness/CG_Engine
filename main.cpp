@@ -5,7 +5,7 @@
 
 int main()
 {
-    Window window(800, 600, "OpenGL OBJ Example");
+    Window window(1600, 1200, "OpenGL OBJ Example");
 
     Model model1;
     if (!model1.loadOBJ("../material/models/bunny.obj"))

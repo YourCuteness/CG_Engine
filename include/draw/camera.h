@@ -9,6 +9,8 @@ public:
     Transform transform;
 
 public:
+    Camera();
+
     virtual ~Camera() = default;
 
     glm::mat4 getViewMatrix() const;
