@@ -106,6 +106,25 @@ bool Model::loadOBJ(const std::string &filePath)
         }
     }
 
+    if (!vertices.empty())
+    {
+        glm::vec3 min = vertices[0].position;
+        glm::vec3 max = vertices[0].position;
+
+        for (const auto &vertex : vertices)
+        {
+            min = glm::min(min, vertex.position);
+            max = glm::max(max, vertex.position);
+        }
+
+        glm::vec3 center = (min + max) / 2.0f;
+
+        for (auto &vertex : vertices)
+        {
+            vertex.position -= center;
+        }
+    }
+
     return true;
 }
 

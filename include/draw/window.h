@@ -7,6 +7,13 @@
 #include <draw/camera.h>
 #include <draw/mouse.h>
 
+enum class RenderMode
+{
+    AlphaTesting,
+    AlphaBlending,
+    DepthPeeling
+};
+
 class Window
 {
 public:
@@ -22,8 +29,14 @@ private:
     std::vector<Model *> models;
     unsigned int shaderProgram;
     Camera *_camera;
+    enum RenderMode _renderMode;
+    float lightIntensity = 1.0f;
+    glm::vec3 _lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec4 _clearColor = glm::vec4(0.26f, 0.61f, 1.0f, 1.0f);
+    bool _wireframe = false;
 
     void initOpenGL();
+    void renderUI();
     void render();
     void processInput();
     unsigned int compileShader(const char *source, GLenum type);

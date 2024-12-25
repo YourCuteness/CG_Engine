@@ -2,6 +2,12 @@
 #include <draw/window.h>
 #include <glm/glm.hpp>
 
+Camera::Camera()
+{
+    transform.position = glm::vec3(0.0f, 0.0f, 5.0f);
+    transform.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+}
+
 glm::mat4 Camera::getViewMatrix() const
 {
     return glm::lookAt(
@@ -61,12 +67,12 @@ void Camera::camera_control(GLFWwindow *window)
     Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (_window->_input.mouse.move.xNow != _window->_input.mouse.move.xOld)
     {
-        this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.xNow - _window->_input.mouse.move.xOld) * cameraRotateSpeed * _deltaTime), glm::vec3(0.0f, 1.0f, 0.0f));
+        this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.xOld - _window->_input.mouse.move.xNow) * cameraRotateSpeed * _deltaTime), glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     if (_window->_input.mouse.move.yNow != _window->_input.mouse.move.yOld)
     {
-        this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.yNow - _window->_input.mouse.move.yOld) * cameraRotateSpeed * _deltaTime), this->transform.rotation * glm::vec3(1.0f, 0.0f, 0.0f));
+        this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.yOld - _window->_input.mouse.move.yNow) * cameraRotateSpeed * _deltaTime), this->transform.rotation * glm::vec3(1.0f, 0.0f, 0.0f));
     }
     _window->_input.forwardState();
 }
