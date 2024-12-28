@@ -35,7 +35,7 @@ float lastFrame = 0.0f;
 void Camera::camera_control(GLFWwindow *window)
 {
     constexpr float cameraMoveSpeed = 5.0f;
-    constexpr float cameraRotateSpeed = 2.0f;
+    constexpr float cameraRotateSpeed = 10.0f;
     float currentFrame = glfwGetTime();
     float _deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -65,12 +65,12 @@ void Camera::camera_control(GLFWwindow *window)
     }
 
     Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-    if (_window->_input.mouse.move.xNow != _window->_input.mouse.move.xOld)
+    if (_window->_input.mouse.move.xNow != _window->_input.mouse.move.xOld && _window->_input.mouse.press.left == true)
     {
         this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.xOld - _window->_input.mouse.move.xNow) * cameraRotateSpeed * _deltaTime), glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
-    if (_window->_input.mouse.move.yNow != _window->_input.mouse.move.yOld)
+    if (_window->_input.mouse.move.yNow != _window->_input.mouse.move.yOld && _window->_input.mouse.press.left == true)
     {
         this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.yOld - _window->_input.mouse.move.yNow) * cameraRotateSpeed * _deltaTime), this->transform.rotation * glm::vec3(1.0f, 0.0f, 0.0f));
     }
