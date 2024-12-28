@@ -191,6 +191,15 @@ void Window::render()
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(_lightColor));
 
+        if (_wireframe)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 启用线框模式
+        }
+        else
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // 启用填充模式
+        }
+
         glBindVertexArray(model->VAO);
         glDrawElements(GL_TRIANGLES, static_cast<int>(model->indices.size()), GL_UNSIGNED_INT, 0);
     }
@@ -212,7 +221,7 @@ void Window::renderUI()
     {
         ImGui::Checkbox("wireframe", &_wireframe);
         ImGui::NewLine();
-        ImGui::SliderFloat("transparent", &lightIntensity, 0.0f, 1.0f);
+        // ImGui::SliderFloat("transparent", &lightIntensity, 0.0f, 1.0f);
         ImGui::ColorEdit3("light color", (float *)&_lightColor);
         ImGui::NewLine();
         ImGui::ColorEdit3("background", (float *)&_clearColor);
