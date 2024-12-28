@@ -6,9 +6,21 @@
 
 int main()
 {
+    std::string inPutString;
     std::string pathToModel;
-    std::cout << "Please input the path of the model:";
-    std::cin >> pathToModel;
+    std::cout << "Please input the path of the model: (eg. C:\\bunny.obj)\n";
+    std::cin >> inPutString;
+    for (int i = 0; i < inPutString.size(); i++)
+    {
+        if (inPutString[i] == '"')
+        {
+            continue;
+        }
+        else
+        {
+            pathToModel += inPutString[i];
+        }
+    }
 
     Window window(1600, 1200, "Example");
 
