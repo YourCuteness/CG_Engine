@@ -184,10 +184,12 @@ void Window::render()
         unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
         unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
+        unsigned int lightColorLoc = glGetUniformLocation(shaderProgram, "LightColor");
 
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniform3fv(lightColorLoc, 1, glm::value_ptr(_lightColor));
 
         glBindVertexArray(model->VAO);
         glDrawElements(GL_TRIANGLES, static_cast<int>(model->indices.size()), GL_UNSIGNED_INT, 0);
