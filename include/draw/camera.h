@@ -18,6 +18,11 @@ public:
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
     void camera_control(GLFWwindow *window);
+
+    glm::vec3 getPosition() const
+    {
+        return transform.position;
+    }
 };
 
 class PerspectiveCamera : public Camera

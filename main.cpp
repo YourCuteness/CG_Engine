@@ -6,11 +6,11 @@
 
 int main()
 {
-    Window window(1600, 1200, "OpenGL OBJ Example");
-
     std::string pathToModel;
     std::cout << "Please input the path of the model:";
     std::cin >> pathToModel;
+
+    Window window(1600, 1200, "Example");
 
     Model model1;
     if (!model1.loadOBJ(pathToModel))
