@@ -12,6 +12,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <draw\stb_image_write.h>
+#include <model\voxel.h>
 
 bool addobj = false;
 char inputBuffer[256] = "";
@@ -435,6 +436,24 @@ void Window::addObj()
         this->addModel(*model1);
         addobj = false;
     }
+}
+
+void Window::addCube()
+{
+    Model cubeModel;
+    auto [vertices, indices] = createCube();
+    cubeModel.vertices = vertices;
+    cubeModel.indices = indices;
+    this->addModel(cubeModel);
+}
+
+void Window::addSphere()
+{
+    Model sphereModel;
+    auto [vertices, indices] = createSphere(1.0f, 36, 18);
+    sphereModel.vertices = vertices;
+    sphereModel.indices = indices;
+    this->addModel(sphereModel);
 }
 
 std::string readShaderFile(const std::string &filePath)
