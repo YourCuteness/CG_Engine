@@ -30,7 +30,10 @@ private:
     unsigned int shaderProgram;
     Camera *_camera;
     enum RenderMode _renderMode;
-    float lightIntensity = 1.0f;
+    const float PI = 3.14159265359f;
+    float light_r = 5.0f;
+    float light_theta = 0.5 * PI;
+    float light_phi = 0.0f;
     glm::vec3 _lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec4 _clearColor = glm::vec4(0.26f, 0.61f, 1.0f, 1.0f);
     bool _wireframe = false;

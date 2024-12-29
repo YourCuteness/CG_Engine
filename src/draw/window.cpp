@@ -176,7 +176,7 @@ void Window::render()
 
     glm::mat4 view = _camera->getViewMatrix();
     glm::mat4 projection = _camera->getProjectionMatrix();
-    glm::vec3 cameraPosition = _camera->getPosition();
+    // glm::vec3 cameraPosition = _camera->getPosition();
 
     for (auto &model : models)
     {
@@ -192,7 +192,7 @@ void Window::render()
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(_lightColor));
-        glUniform3fv(lightPosLoc, 1, glm::value_ptr(cameraPosition));
+        glUniform3fv(lightPosLoc, 1, glm::value_ptr(glm::vec3(light_r * sin(light_theta) * sin(light_phi), light_r * cos(light_theta), light_r * sin(light_theta) * cos(light_phi))));
 
         if (_wireframe)
         {
@@ -224,7 +224,9 @@ void Window::renderUI()
     {
         ImGui::Checkbox("wireframe", &_wireframe);
         ImGui::NewLine();
-        // ImGui::SliderFloat("transparent", &lightIntensity, 0.0f, 1.0f);
+        ImGui::SliderFloat("r", &light_r, 0.0f, 10.0f);
+        ImGui::SliderFloat("theta", &light_theta, 0.0f, 2 * PI);
+        ImGui::SliderFloat("phi", &light_phi, 0.0f, 2 * PI);
         ImGui::ColorEdit3("light color", (float *)&_lightColor);
         ImGui::NewLine();
         ImGui::ColorEdit3("background", (float *)&_clearColor);
