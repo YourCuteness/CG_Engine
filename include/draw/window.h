@@ -42,6 +42,7 @@ private:
     void renderUI();
     void render();
     void processInput();
+    void addObj();
     unsigned int compileShader(const char *source, GLenum type);
     unsigned int linkProgram(unsigned int vertexShader, unsigned int fragmentShader);
     void setupMesh(Model &model);

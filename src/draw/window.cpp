@@ -11,6 +11,9 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+bool addobj = false;
+char inputBuffer[256] = "";
+
 Window::Window(int width, int height, const char *title)
 {
     if (!glfwInit())
@@ -232,12 +235,17 @@ void Window::renderUI()
         ImGui::ColorEdit3("light color", (float *)&_lightColor);
         ImGui::NewLine();
         ImGui::ColorEdit3("background", (float *)&_clearColor);
+        ImGui::NewLine();
+        addobj = ImGui::Button("Add obj");
+        ImGui::InputText("Model Path", inputBuffer, IM_ARRAYSIZE(inputBuffer));
 
         ImGui::End();
     }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    addObj();
 }
 
 void Window::processInput()
@@ -261,6 +269,34 @@ void Window::run()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+    }
+}
+
+void Window::addObj()
+{
+    if (addobj)
+    {
+        std::string pathToModel;
+        for (int i = 0; i < sizeof(inputBuffer); i++)
+        {
+            if (inputBuffer[i] == '"')
+            {
+                continue;
+            }
+            else
+            {
+                pathToModel += inputBuffer[i];
+            }
+        }
+        Model* model1 = new Model();
+        if (!model1->loadOBJ(pathToModel))
+        { // 请修改为你的 OBJ 文件路径
+            std::cerr << "Failed to load model1" << std::endl;
+            return;
+        }
+
+        this->addModel(*model1);
+        addobj = false;
     }
 }
 
