@@ -4,33 +4,10 @@
 #include <vector>
 #include <string>
 #include <glm/glm.hpp>
+#include <glad/glad.h>
+#include <model/model.h>
 #include <algorithm> // for std::find_if
 #include <iterator>  // for std::distance
-
-class Model
-{
-public:
-    bool loadOBJ(const std::string &filePath);
-
-private:
-    void processFace(const std::vector<std::string> &face,
-                     const std::vector<glm::vec3> &positions,
-                     const std::vector<glm::vec3> &normals,
-                     const std::vector<glm::vec2> &texCoords);
-
-    struct Vertex
-    {
-        glm::vec3 position;
-        glm::vec3 normal;
-        glm::vec2 texCoord;
-
-        Vertex(const glm::vec3 &pos, const glm::vec3 &norm, const glm::vec2 &tex)
-            : position(pos), normal(norm), texCoord(tex) {}
-    };
-
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-};
 
 bool Model::loadOBJ(const std::string &filePath)
 {
@@ -189,5 +166,122 @@ void Model::processFace(const std::vector<std::string> &face,
 
         // 将当前顶点的索引添加到 indices 中
         indices.push_back(index);
+    }
+}
+
+void Model::computeAABB()
+{
+    if (vertices.empty())
+        return;
+
+    minBounds = glm::vec3(FLT_MAX);
+    maxBounds = glm::vec3(-FLT_MAX);
+
+    for (const auto &vertex : vertices)
+    {
+        minBounds = glm::min(minBounds, vertex.position);
+        maxBounds = glm::max(maxBounds, vertex.position);
+    }
+}
+
+bool Model::isPointInsideAABB(const glm::vec3 &point)
+{
+    return (point.x >= minBounds.x && point.x <= maxBounds.x &&
+            point.y >= minBounds.y && point.y <= maxBounds.y &&
+            point.z >= minBounds.z && point.z <= maxBounds.z);
+}
+
+bool Model::intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDir)
+{
+    float tmin = (minBounds.x - rayOrigin.x) / rayDir.x;
+    float tmax = (maxBounds.x - rayOrigin.x) / rayDir.x;
+    if (tmin > tmax)
+        std::swap(tmin, tmax);
+
+    float tymin = (minBounds.y - rayOrigin.y) / rayDir.y;
+    float tymax = (maxBounds.y - rayOrigin.y) / rayDir.y;
+    if (tymin > tymax)
+        std::swap(tymin, tymax);
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+    tmin = glm::max(tmin, tymin);
+    tmax = glm::min(tmax, tymax);
+
+    float tzmin = (minBounds.z - rayOrigin.z) / rayDir.z;
+    float tzmax = (maxBounds.z - rayOrigin.z) / rayDir.z;
+    if (tzmin > tzmax)
+        std::swap(tzmin, tzmax);
+
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+
+    return true;
+}
+
+void Model::setPosition(const glm::vec3 &newPosition)
+{
+    transform.position = newPosition;
+    isPositionChanged = true;
+}
+
+void Model::setRotation(const glm::quat &newRotation)
+{
+    transform.rotation = newRotation;
+    isRotationChanged = true;
+}
+
+void Model::setScale(const glm::vec3 &newScale)
+{
+    transform.scale = newScale;
+    isScaleChanged = true;
+}
+
+void Model::updateTransform()
+{
+    bool needUpdate = false;
+
+    // 只更新位置
+    if (isPositionChanged)
+    {
+        needUpdate = true;
+        for (auto &vertex : vertices)
+        {
+            vertex.position += transform.position; // 只更新位置，不应用旋转和缩放
+        }
+        isPositionChanged = false; // 重置位置变化标志
+    }
+
+    // 只更新旋转
+    if (isRotationChanged)
+    {
+        needUpdate = true;
+        for (auto &vertex : vertices)
+        {
+            // 应用旋转
+            vertex.position = transform.position + transform.rotation * (vertex.position - transform.position);
+        }
+        isRotationChanged = false; // 重置旋转变化标志
+    }
+
+    // 只更新缩放
+    if (isScaleChanged)
+    {
+        needUpdate = true;
+        for (auto &vertex : vertices)
+        {
+            // 应用缩放
+            vertex.position = transform.position + (vertex.position - transform.position) * transform.scale;
+        }
+        isScaleChanged = false; // 重置缩放变化标志
+    }
+
+    // 只有在有变化时才更新顶点数据
+    if (needUpdate)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, this->vertices.size() * sizeof(Vertex), this->vertices.data());
+        glBindBuffer(GL_ARRAY_BUFFER, 0); // 解绑缓冲区
     }
 }

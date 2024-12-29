@@ -17,6 +17,8 @@ public:
 
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
+    virtual void zoom(float zoomFactor) = 0; // 新增的纯虚函数，用于缩放
+
     void camera_control(GLFWwindow *window);
 
     glm::vec3 getPosition() const
@@ -39,6 +41,8 @@ public:
     ~PerspectiveCamera() = default;
 
     glm::mat4 getProjectionMatrix() const override;
+
+    void zoom(float zoomFactor) override;
 };
 
 class OrthographicCamera : public Camera
@@ -57,4 +61,6 @@ public:
     ~OrthographicCamera() = default;
 
     glm::mat4 getProjectionMatrix() const override;
+
+    void zoom(float zoomFactor) override;
 };

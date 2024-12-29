@@ -249,6 +249,13 @@ void Window::renderUI()
         ImGui::End();
     }
 
+    if (_selectedModel != -1)
+    {
+        ImGui::Begin("Model Info");
+        ImGui::Text("Selected Model: %d", _selectedModel);
+        ImGui::End();
+    }
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -257,12 +264,93 @@ void Window::renderUI()
 
 void Window::processInput()
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (_selectedModel == -1)
     {
-        glfwSetWindowShouldClose(window, true);
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        {
+            glfwSetWindowShouldClose(window, true);
+        }
+
+        _camera->camera_control(window);
+    }
+    else
+    {
+        glm::vec3 moveDelta(0.0f);
+
+        // 获取相机方向向量
+        glm::vec3 cameraFront = _camera->transform.getUp();    // 相机上向向量
+        glm::vec3 cameraRight = _camera->transform.getRight(); // 相机右向向量
+        float moveSpeed = 0.1f;                                // 调整移动速度
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            moveDelta += cameraFront * moveSpeed; // 沿着前向移动
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            moveDelta -= cameraFront * moveSpeed; // 沿着后向移动
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            moveDelta -= cameraRight * moveSpeed; // 沿着左向移动
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            moveDelta += cameraRight * moveSpeed; // 沿着右向移动
+
+        // 更新模型位置
+        glm::vec3 newPosition = moveDelta;
+        models[_selectedModel]->setPosition(newPosition); // 使用 setPosition 更新模型位置
+
+        models[_selectedModel]->updateTransform(); // 更新 GPU 数据或其他后续逻辑（如更新矩阵）
     }
 
-    _camera->camera_control(window);
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        if (!_isMousePressed)
+        {
+            dragTime = glfwGetTime();
+            glfwGetCursorPos(window, &_lastX, &_lastY);
+            _isMousePressed = true; // 标记鼠标按下
+        }
+        else
+        {
+            // 鼠标拖动
+            double mouseX, mouseY;
+            glfwGetCursorPos(window, &mouseX, &mouseY);
+
+            // 计算鼠标的偏移量
+            float offsetX = static_cast<float>(mouseX - _lastX);
+            float offsetY = static_cast<float>(mouseY - _lastY); // Y轴翻转
+
+            _lastX = mouseX;
+            _lastY = mouseY;
+
+            // 调整旋转速度
+            float rotationSpeed = 0.1f;
+
+            // 根据鼠标偏移量来旋转模型
+            if (_selectedModel != -1)
+            {
+                Model &selectedModel = *models[_selectedModel];
+
+                // 旋转矩阵
+                glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(offsetX * rotationSpeed), glm::vec3(0.0f, 1.0f, 0.0f)); // 绕Y轴旋转
+                rotation = glm::rotate(rotation, glm::radians(offsetY * rotationSpeed), glm::vec3(1.0f, 0.0f, 0.0f));                  // 绕X轴旋转
+
+                glm::quat rotationQuat = glm::quat(glm::vec3(glm::radians(offsetY * rotationSpeed), glm::radians(offsetX * rotationSpeed), 0.0f));
+
+                selectedModel.setRotation(rotationQuat); // 使用 setRotation 更新模型旋转
+            }
+        }
+    }
+    else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE && _isMousePressed)
+    {
+        // 鼠标按下后释放时触发
+        _isMousePressed = false; // 重置状态
+        float releaseTime = glfwGetTime();
+        dragTime = releaseTime - dragTime;
+        double mouseX, mouseY;
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+
+        if (dragTime < 0.5)
+        {
+            processMouseClick(mouseX, mouseY);
+        }
+    }
 }
 
 void Window::run()
@@ -301,6 +389,7 @@ void Window::addObj()
             std::cerr << "Failed to load model1" << std::endl;
             return;
         }
+        model1->computeAABB();
 
         this->addModel(*model1);
         addobj = false;
@@ -368,6 +457,72 @@ void Window::scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
     Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     _window->_input.mouse.scroll.xOffset = static_cast<float>(xOffset);
     _window->_input.mouse.scroll.yOffset = static_cast<float>(yOffset);
+
+    float zoomFactor = static_cast<float>(yOffset) * 0.1f; // 调整缩放速度
+
+    // 如果有选中的模型，优先缩放模型
+    if (_window->_selectedModel != -1) // 假设 _selectedModel 存储选中模型的索引
+    {
+        Model &selectedModel = *_window->models[_window->_selectedModel];
+
+        selectedModel.setScale(1.0f + zoomFactor * glm::vec3(1.0f)); // 使用 setScale 更新模型缩放
+    }
+    else if (_window->_camera) // 如果没有选中模型，则缩放相机
+    {
+        _window->_camera->zoom(zoomFactor);
+    }
+}
+
+glm::vec3 Window::screenToWorldRay(double mouseX, double mouseY)
+{
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    // 将鼠标位置标准化到 [-1, 1]
+    float x = (2.0f * mouseX) / width - 1.0f;
+    float y = 1.0f - (2.0f * mouseY) / height; // Y 方向反转
+    float z = 1.0f;
+
+    glm::vec3 rayNDC(x, y, z); // 规范化设备坐标 (NDC)
+
+    // 从 NDC 转换到世界坐标系
+    glm::vec4 rayClip(rayNDC.x, rayNDC.y, -1.0f, 1.0f);
+    glm::vec4 rayEye = glm::inverse(_camera->getProjectionMatrix()) * rayClip;
+    rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
+
+    glm::vec3 rayWorld = glm::vec3(glm::inverse(_camera->getViewMatrix()) * rayEye);
+    return glm::normalize(rayWorld);
+}
+
+glm::vec3 Window::getRayIntersectionWithPlane(const glm::vec3 &rayOrigin,
+                                              const glm::vec3 &rayDir,
+                                              const glm::vec3 &planeNormal,
+                                              const glm::vec3 &planePoint)
+{
+    float denom = glm::dot(planeNormal, rayDir);
+    if (fabs(denom) < 1e-6)
+        return glm::vec3(FLT_MAX); // 平行，无交点
+
+    float t = glm::dot(planePoint - rayOrigin, planeNormal) / denom;
+    return rayOrigin + t * rayDir;
+}
+
+void Window::processMouseClick(double mouseX, double mouseY)
+{
+    glm::vec3 rayOrigin = _camera->getPosition();
+    glm::vec3 rayDir = screenToWorldRay(mouseX, mouseY);
+
+    int count = 0;
+    for (auto *model : models)
+    {
+        if (model->intersectsRay(rayOrigin, rayDir))
+        {
+            _selectedModel = count;
+            return;
+        }
+        count++;
+    }
+    _selectedModel = -1;
 }
 
 void Window::saveSceneAsObj()

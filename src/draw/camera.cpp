@@ -64,6 +64,18 @@ void Camera::camera_control(GLFWwindow *window)
             this->transform.getRight() * cameraMoveSpeed * _deltaTime;
     }
 
+    // 空格键：沿 Y 正方向移动
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        this->transform.position += glm::vec3(0.0f, cameraMoveSpeed * _deltaTime, 0.0f);
+    }
+
+    // Ctrl 键：沿 Y 负方向移动
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    {
+        this->transform.position -= glm::vec3(0.0f, cameraMoveSpeed * _deltaTime, 0.0f);
+    }
+
     Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (_window->_input.mouse.move.xNow != _window->_input.mouse.move.xOld && _window->_input.mouse.press.left == true)
     {
@@ -75,4 +87,34 @@ void Camera::camera_control(GLFWwindow *window)
         this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.yOld - _window->_input.mouse.move.yNow) * cameraRotateSpeed * _deltaTime), this->transform.rotation * glm::vec3(1.0f, 0.0f, 0.0f));
     }
     _window->_input.forwardState();
+}
+
+void PerspectiveCamera::zoom(float zoomFactor)
+{
+    // 调整视角，确保 fovy 在合理范围内
+    fovy -= zoomFactor;
+    if (fovy < 1.0f)
+        fovy = 1.0f;
+    if (fovy > 45.0f)
+        fovy = 45.0f;
+}
+
+void OrthographicCamera::zoom(float zoomFactor)
+{
+    // 调整边界，确保缩放不导致反向
+    left += zoomFactor;
+    right -= zoomFactor;
+    bottom += zoomFactor;
+    top -= zoomFactor;
+
+    if (left >= right)
+    {
+        left = -1.0f;
+        right = 1.0f;
+    }
+    if (bottom >= top)
+    {
+        bottom = -1.0f;
+        top = 1.0f;
+    }
 }
