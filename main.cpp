@@ -6,23 +6,21 @@
 
 int main()
 {
-    // std::string inPutString;
-    // std::string pathToModel;
-    // std::cout << "Please input the path of the model: (eg. C:\\bunny.obj)\n";
-    // std::cin >> inPutString;
-    // for (int i = 0; i < inPutString.size(); i++)
-    // {
-    //     if (inPutString[i] == '"')
-    //     {
-    //         continue;
-    //     }
-    //     else
-    //     {
-    //         pathToModel += inPutString[i];
-    //     }
-    // }
-
-    std::string pathToModel = "C:\\Users\\22436\\Desktop\\ZJU_CG\\material\\models\\body.obj";
+    std::string inPutString;
+    std::string pathToModel;
+    std::cout << "Please input the path of the model: (eg. C:\\bunny.obj)\n";
+    std::cin >> inPutString;
+    for (int i = 0; i < inPutString.size(); i++)
+    {
+        if (inPutString[i] == '"')
+        {
+            continue;
+        }
+        else
+        {
+            pathToModel += inPutString[i];
+        }
+    }
 
     Window window(1600, 1200, "Example");
 
