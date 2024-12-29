@@ -251,30 +251,39 @@ void Model::updateTransform()
             vertex.position += transform.position; // 只更新位置，不应用旋转和缩放
         }
         isPositionChanged = false; // 重置位置变化标志
+        this->computeAABB();       // 更新AABB包围盒
     }
 
     // 只更新旋转
     if (isRotationChanged)
     {
         needUpdate = true;
+        glm::mat3 rotationMatrix = glm::mat3_cast(transform.rotation); // 从四元数获取旋转矩阵
         for (auto &vertex : vertices)
         {
-            // 应用旋转
-            vertex.position = transform.position + transform.rotation * (vertex.position - transform.position);
+            vertex.position = transform.position + rotationMatrix * (vertex.position - transform.position);
+            vertex.normal = glm::normalize(rotationMatrix * vertex.normal); // 更新法线方向
         }
         isRotationChanged = false; // 重置旋转变化标志
+        this->computeAABB();       // 更新AABB包围盒
     }
 
     // 只更新缩放
     if (isScaleChanged)
     {
         needUpdate = true;
+        glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), transform.position) *
+                                glm::mat4_cast(transform.rotation) *
+                                glm::scale(glm::mat4(1.0f), transform.scale);
+        glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix))); // 计算法线变换矩阵
+
         for (auto &vertex : vertices)
         {
-            // 应用缩放
             vertex.position = transform.position + (vertex.position - transform.position) * transform.scale;
+            vertex.normal = glm::normalize(normalMatrix * vertex.normal); // 更新法线方向
         }
         isScaleChanged = false; // 重置缩放变化标志
+        this->computeAABB();    // 更新AABB包围盒
     }
 
     // 只有在有变化时才更新顶点数据
