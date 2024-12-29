@@ -238,6 +238,11 @@ void Window::renderUI()
         ImGui::NewLine();
         addobj = ImGui::Button("Add obj");
         ImGui::InputText("Model Path", inputBuffer, IM_ARRAYSIZE(inputBuffer));
+        ImGui::NewLine();
+        if (ImGui::Button("Save Scene as OBJ"))
+        {
+            saveSceneAsObj("C:\\Users\\22436\\Desktop\\ZJU_CG\\material\\models\\scene.obj");
+        }
 
         ImGui::End();
     }
@@ -288,7 +293,7 @@ void Window::addObj()
                 pathToModel += inputBuffer[i];
             }
         }
-        Model* model1 = new Model();
+        Model *model1 = new Model();
         if (!model1->loadOBJ(pathToModel))
         { // 请修改为你的 OBJ 文件路径
             std::cerr << "Failed to load model1" << std::endl;
@@ -361,4 +366,67 @@ void Window::scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
     Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     _window->_input.mouse.scroll.xOffset = static_cast<float>(xOffset);
     _window->_input.mouse.scroll.yOffset = static_cast<float>(yOffset);
+}
+
+void Window::saveSceneAsObj(const std::string &filePath)
+{
+    std::ofstream outFile(filePath);
+    if (!outFile.is_open())
+    {
+        std::cerr << "Unable to open file for writing: " << filePath << std::endl;
+        return;
+    }
+
+    int vertexOffset = 1;   // OBJ 文件顶点索引从1开始
+    int normalOffset = 1;   // 法线索引
+    int texCoordOffset = 1; // 纹理坐标索引
+
+    // 遍历每个模型
+    for (auto &model : models)
+    {
+        // 写入顶点数据
+        for (const auto &vertex : model->vertices)
+        {
+            // 写入顶点坐标
+            outFile << "v "
+                    << vertex.position.x << " "
+                    << vertex.position.y << " "
+                    << vertex.position.z << std::endl;
+
+            // 写入法线数据
+            outFile << "vn "
+                    << vertex.normal.x << " "
+                    << vertex.normal.y << " "
+                    << vertex.normal.z << std::endl;
+
+            // 写入纹理坐标数据
+            outFile << "vt "
+                    << vertex.texCoord.x << " "
+                    << vertex.texCoord.y << std::endl;
+        }
+
+        // 写入面数据
+        for (size_t i = 0; i < model->indices.size(); i += 3)
+        {
+            // OBJ 文件的面格式为：f vertex/texcoord/normal vertex/texcoord/normal vertex/texcoord/normal
+            outFile << "f "
+                    << vertexOffset + model->indices[i] << "/"
+                    << texCoordOffset + model->indices[i] << "/"
+                    << normalOffset + model->indices[i] << " "
+                    << vertexOffset + model->indices[i + 1] << "/"
+                    << texCoordOffset + model->indices[i + 1] << "/"
+                    << normalOffset + model->indices[i + 1] << " "
+                    << vertexOffset + model->indices[i + 2] << "/"
+                    << texCoordOffset + model->indices[i + 2] << "/"
+                    << normalOffset + model->indices[i + 2] << std::endl;
+        }
+
+        // 更新偏移量
+        vertexOffset += model->vertices.size();
+        normalOffset += model->vertices.size();
+        texCoordOffset += model->vertices.size();
+    }
+
+    outFile.close();
+    std::cout << "Scene saved to " << filePath << std::endl;
 }

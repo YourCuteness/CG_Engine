@@ -49,6 +49,7 @@ private:
     static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
     static void cursorPosCallback(GLFWwindow *window, double xPos, double yPos);
     static void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
+    void saveSceneAsObj(const std::string &filePath);
 };
 
 std::string readShaderFile(const std::string &filePath);
