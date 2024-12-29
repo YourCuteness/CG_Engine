@@ -176,7 +176,7 @@ void Window::render()
 
     glm::mat4 view = _camera->getViewMatrix();
     glm::mat4 projection = _camera->getProjectionMatrix();
-    // glm::vec3 cameraPosition = _camera->getPosition();
+    glm::vec3 cameraPosition = _camera->getPosition();
 
     for (auto &model : models)
     {
@@ -187,12 +187,14 @@ void Window::render()
         unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
         unsigned int lightColorLoc = glGetUniformLocation(shaderProgram, "LightColor");
         unsigned int lightPosLoc = glGetUniformLocation(shaderProgram, "LightPos");
+        unsigned int viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
 
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(_lightColor));
         glUniform3fv(lightPosLoc, 1, glm::value_ptr(glm::vec3(light_r * sin(light_theta) * sin(light_phi), light_r * cos(light_theta), light_r * sin(light_theta) * cos(light_phi))));
+        glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPosition));
 
         if (_wireframe)
         {

@@ -17,7 +17,7 @@ void main()
 {
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = aNormal;
+    Normal = normalize(mat3(transpose(inverse(model))) * aNormal); // 计算模型矩阵的逆转置，确保法线正确变换
     lightColor = LightColor;
     lightPos = LightPos;
 }
