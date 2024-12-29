@@ -13,6 +13,7 @@
 
 bool addobj = false;
 char inputBuffer[256] = "";
+char inputBuffer1[256] = "";
 
 Window::Window(int width, int height, const char *title)
 {
@@ -236,12 +237,13 @@ void Window::renderUI()
         ImGui::NewLine();
         ImGui::ColorEdit3("background", (float *)&_clearColor);
         ImGui::NewLine();
-        addobj = ImGui::Button("Add obj");
         ImGui::InputText("Model Path", inputBuffer, IM_ARRAYSIZE(inputBuffer));
+        addobj = ImGui::Button("Add obj");
         ImGui::NewLine();
+        ImGui::InputText("SAVE Path", inputBuffer1, IM_ARRAYSIZE(inputBuffer1));
         if (ImGui::Button("Save Scene as OBJ"))
         {
-            saveSceneAsObj("C:\\Users\\22436\\Desktop\\ZJU_CG\\material\\models\\scene.obj");
+            saveSceneAsObj();
         }
 
         ImGui::End();
@@ -368,8 +370,20 @@ void Window::scrollCallback(GLFWwindow *window, double xOffset, double yOffset)
     _window->_input.mouse.scroll.yOffset = static_cast<float>(yOffset);
 }
 
-void Window::saveSceneAsObj(const std::string &filePath)
+void Window::saveSceneAsObj()
 {
+    std::string filePath;
+    for (int i = 0; i < sizeof(inputBuffer1); i++)
+    {
+        if (inputBuffer1[i] == '"')
+        {
+            continue;
+        }
+        else
+        {
+            filePath += inputBuffer1[i];
+        }
+    }
     std::ofstream outFile(filePath);
     if (!outFile.is_open())
     {
