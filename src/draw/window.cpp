@@ -10,6 +10,9 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <draw\stb_image_write.h>
+#include <model\voxel.h>
 
 bool addobj = false;
 char inputBuffer[256] = "";
@@ -262,8 +265,47 @@ void Window::renderUI()
     addObj();
 }
 
+void Window::saveToFile(const std::string &filename, const std::vector<unsigned char> &pixels, int width, int height)
+{
+    if (stbi_write_png(filename.c_str(), width, height, 3, pixels.data(), width * 3))
+    {
+        std::cout << "Screenshot saved to " << filename << std::endl;
+    }
+    else
+    {
+        std::cerr << "Failed to save screenshot to " << filename << std::endl;
+    }
+}
+
+void Window::captureScreen(const std::string &filename, int width, int height)
+{
+    // 分配内存存储像素数据
+    std::vector<unsigned char> pixels(width * height * 3); // RGB format
+
+    // 从帧缓冲区读取像素数据
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+    // 像素数据是从左下角开始的，需要翻转到右上角
+    for (int y = 0; y < height / 2; ++y)
+    {
+        for (int x = 0; x < width * 3; ++x)
+        {
+            std::swap(pixels[y * width * 3 + x], pixels[(height - 1 - y) * width * 3 + x]);
+        }
+    }
+
+    // 保存到文件（下一步实现保存为 PNG 或其他格式）
+    saveToFile(filename, pixels, width, height);
+}
+
 void Window::processInput()
 {
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+    {
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        captureScreen("screenshot.png", width, height);
+    }
     if (_selectedModel == -1)
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -394,6 +436,24 @@ void Window::addObj()
         this->addModel(*model1);
         addobj = false;
     }
+}
+
+void Window::addCube()
+{
+    Model cubeModel;
+    auto [vertices, indices] = createCube();
+    cubeModel.vertices = vertices;
+    cubeModel.indices = indices;
+    this->addModel(cubeModel);
+}
+
+void Window::addSphere()
+{
+    Model sphereModel;
+    auto [vertices, indices] = createSphere(1.0f, 36, 18);
+    sphereModel.vertices = vertices;
+    sphereModel.indices = indices;
+    this->addModel(sphereModel);
 }
 
 std::string readShaderFile(const std::string &filePath)

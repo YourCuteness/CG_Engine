@@ -6,6 +6,7 @@
 #include <model/model.h>
 #include <draw/camera.h>
 #include <draw/mouse.h>
+#include <string>
 
 enum class RenderMode
 {
@@ -67,6 +68,10 @@ private:
     static void cursorPosCallback(GLFWwindow *window, double xPos, double yPos);
     static void scrollCallback(GLFWwindow *window, double xOffset, double yOffset);
     void saveSceneAsObj();
+    void captureScreen(const std::string &filename, int width, int height);
+    void saveToFile(const std::string &filename, const std::vector<unsigned char> &pixels, int width, int height);
+    void addCube();
+    void addSphere();
 };
 
 std::string readShaderFile(const std::string &filePath);
