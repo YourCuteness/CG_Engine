@@ -1,11 +1,13 @@
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord; // 新增：纹理坐标输入
 
 out vec3 Normal;
 out vec3 FragPos;
 out vec3 lightColor;
 out vec3 lightPos;
+out vec2 TexCoord; // 新增：纹理坐标输出
 
 uniform mat4 model;
 uniform mat4 view;
@@ -20,4 +22,6 @@ void main()
     Normal = normalize(mat3(transpose(inverse(model))) * aNormal); // 计算模型矩阵的逆转置，确保法线正确变换
     lightColor = LightColor;
     lightPos = LightPos;
+
+    TexCoord = aTexCoord; // 传递纹理坐标
 }

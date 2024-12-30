@@ -7,10 +7,24 @@ in vec3 lightColor;
 in vec3 lightPos;
 
 uniform vec3 viewPos;
+uniform sampler2D texture1; // 新增：纹理采样器
+uniform bool useTexture;    // 是否使用纹理
 
 void main()
 {
-    vec3 objectColor = vec3(0.5f, 0.5f, 0.5f);
+    // 默认物体颜色
+    vec3 defaultColor = vec3(0.5f, 0.5f, 0.5f);
+
+    // 根据是否绑定纹理决定 objectColor
+    vec3 objectColor;
+    if (useTexture)
+    {
+        objectColor = texture(texture1, vec2(FragPos.x, FragPos.z)).rgb;
+    }
+    else
+    {
+        objectColor = defaultColor;
+    }
     float shininess = 0.05f;
 
     float ambientStrength = 0.10;

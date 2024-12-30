@@ -22,6 +22,8 @@ public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     unsigned int VAO, VBO, EBO;
+    unsigned int textureID;  // 新增：纹理ID
+    bool hasTexture = false; // 新增：是否有纹理
 
     Transform transform; // 添加 Transform 以控制模型的变换
 
@@ -30,6 +32,7 @@ public:
     bool intersectsRay(const glm::vec3 &rayOrigin, const glm::vec3 &rayDir);
 
     bool loadOBJ(const std::string &filePath);
+    bool loadTexture(const std::string &filePath); // 新增：加载纹理的方法
 
     void updateTransform();
     void setPosition(const glm::vec3 &newPosition);

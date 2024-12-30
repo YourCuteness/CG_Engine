@@ -6,8 +6,12 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <model/model.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <draw/stb_image.h>
 #include <algorithm> // for std::find_if
 #include <iterator>  // for std::distance
+
+#define STB_IMAGE_IMPLEMENTATION
 
 bool Model::loadOBJ(const std::string &filePath)
 {
@@ -167,6 +171,39 @@ void Model::processFace(const std::vector<std::string> &face,
         // 将当前顶点的索引添加到 indices 中
         indices.push_back(index);
     }
+}
+
+bool Model::loadTexture(const std::string &texturePath)
+{
+    std::string cleanPath = texturePath;
+    cleanPath.erase(std::remove(cleanPath.begin(), cleanPath.end(), '\"'), cleanPath.end());
+
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // 设置纹理环绕和过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // 加载图片
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(cleanPath.c_str(), &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        // 假设纹理是 RGB 格式
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cerr << "Failed to load texture: " << cleanPath << std::endl;
+        return false;
+    }
+    stbi_image_free(data);
+    hasTexture = true;
+    return true;
 }
 
 void Model::computeAABB()

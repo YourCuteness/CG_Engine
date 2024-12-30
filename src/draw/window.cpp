@@ -18,6 +18,7 @@
 bool addobj = false;
 char inputBuffer[256] = "";
 char inputBuffer1[256] = "";
+char texturebuffer[256] = "";
 
 Window::Window(int width, int height, const char *title)
 {
@@ -186,16 +187,16 @@ void Window::render()
     glm::mat4 projection = _camera->getProjectionMatrix();
     glm::vec3 cameraPosition = _camera->getPosition();
 
+    unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
+    unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
+    unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
+    unsigned int lightColorLoc = glGetUniformLocation(shaderProgram, "LightColor");
+    unsigned int lightPosLoc = glGetUniformLocation(shaderProgram, "LightPos");
+    unsigned int viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
+
     for (auto &model : models)
     {
         glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-        unsigned int modelLoc = glGetUniformLocation(shaderProgram, "model");
-        unsigned int viewLoc = glGetUniformLocation(shaderProgram, "view");
-        unsigned int projLoc = glGetUniformLocation(shaderProgram, "projection");
-        unsigned int lightColorLoc = glGetUniformLocation(shaderProgram, "LightColor");
-        unsigned int lightPosLoc = glGetUniformLocation(shaderProgram, "LightPos");
-        unsigned int viewPosLoc = glGetUniformLocation(shaderProgram, "viewPos");
 
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
@@ -203,6 +204,18 @@ void Window::render()
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(_lightColor));
         glUniform3fv(lightPosLoc, 1, glm::value_ptr(glm::vec3(light_r * sin(light_theta) * sin(light_phi), light_r * cos(light_theta), light_r * sin(light_theta) * cos(light_phi))));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPosition));
+
+        // 根据是否加载了纹理设置 `useTexture`
+        int useTextureLoc = glGetUniformLocation(shaderProgram, "useTexture");
+        glUniform1i(useTextureLoc, model->hasTexture);
+
+        if (model->hasTexture)
+        {
+            // 绑定纹理
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, model->textureID);                  // 绑定当前模型的纹理
+            glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0); // 绑定到着色器的 texture1 纹理单元
+        }
 
         if (_wireframe)
         {
@@ -249,14 +262,19 @@ void Window::renderUI()
         {
             saveSceneAsObj();
         }
-
-        ImGui::End();
-    }
-
-    if (_selectedModel != -1)
-    {
-        ImGui::Begin("Model Info");
+        ImGui::NewLine();
         ImGui::Text("Selected Model: %d", _selectedModel);
+        ImGui::InputText("Texture Path", texturebuffer, IM_ARRAYSIZE(texturebuffer));
+        if (ImGui::Button("Load Texture") && _selectedModel != -1)
+        {
+            models[_selectedModel]->loadTexture(texturebuffer);
+        }
+        if (ImGui::Button("Delete") && _selectedModel != -1)
+        {
+            models.erase(models.begin() + _selectedModel);
+            _selectedModel = -1;
+        }
+
         ImGui::End();
     }
 
