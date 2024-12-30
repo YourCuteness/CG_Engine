@@ -254,6 +254,14 @@ void Window::renderUI()
         ImGui::NewLine();
         ImGui::ColorEdit3("background", (float *)&_clearColor);
         ImGui::NewLine();
+        if (ImGui::Button("Add Cube"))
+        {
+            addCube();
+        }
+        if (ImGui::Button("Add Sphere"))
+        {
+            addSphere();
+        }
         ImGui::InputText("Model Path", inputBuffer, IM_ARRAYSIZE(inputBuffer));
         addobj = ImGui::Button("Add obj");
         ImGui::NewLine();
@@ -436,10 +444,9 @@ void Window::run()
 {
     while (!glfwWindowShouldClose(window))
     {
-        processInput();
-
         render();
         renderUI();
+        processInput();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
