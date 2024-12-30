@@ -70,13 +70,13 @@ void Camera::camera_control(GLFWwindow *window)
         this->transform.position += glm::vec3(0.0f, cameraMoveSpeed * _deltaTime, 0.0f);
     }
 
-    // Ctrl 键：沿 Y 负方向移动
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+    // 鼠标右键 键：沿 Y 负方向移动
+    if (_window->_input.mouse.press.right == true)
     {
         this->transform.position -= glm::vec3(0.0f, cameraMoveSpeed * _deltaTime, 0.0f);
     }
 
-    Window *_window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
     if (_window->_input.mouse.move.xNow != _window->_input.mouse.move.xOld && _window->_input.mouse.press.left == true)
     {
         this->transform.rotation *= glm::angleAxis(glm::radians((_window->_input.mouse.move.xOld - _window->_input.mouse.move.xNow) * cameraRotateSpeed * _deltaTime), glm::vec3(0.0f, 1.0f, 0.0f));

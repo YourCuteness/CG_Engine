@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <ctime>
 #include <fstream>
 #include <string>
 #include <glad/glad.h>
@@ -304,7 +305,25 @@ void Window::processInput()
     {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-        captureScreen("screenshot.png", width, height);
+
+        // 获取当前时间
+        std::time_t now = std::time(nullptr);
+        std::tm *localTime = std::localtime(&now);
+
+        // 手动格式化时间为 YYYYMMDDHHMMSS
+        char timestamp[16];
+        std::snprintf(timestamp, sizeof(timestamp), "%04d%02d%02d%02d%02d%02d",
+                      1900 + localTime->tm_year, // 年
+                      1 + localTime->tm_mon,     // 月
+                      localTime->tm_mday,        // 日
+                      localTime->tm_hour,        // 时
+                      localTime->tm_min,         // 分
+                      localTime->tm_sec);        // 秒
+
+        // 拼接文件名
+        std::string filename = "..\\material\\screenshot\\" + std::string(timestamp) + ".png";
+
+        captureScreen(filename, width, height);
     }
     if (_selectedModel == -1)
     {
