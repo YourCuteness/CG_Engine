@@ -484,20 +484,22 @@ void Window::addObj()
 
 void Window::addCube()
 {
-    Model cubeModel;
+    Model *cubeModel = new Model();
     auto [vertices, indices] = createCube();
-    cubeModel.vertices = vertices;
-    cubeModel.indices = indices;
-    this->addModel(cubeModel);
+    cubeModel->vertices = vertices;
+    cubeModel->indices = indices;
+    cubeModel->computeAABB();
+    this->addModel(*cubeModel);
 }
 
 void Window::addSphere()
 {
-    Model sphereModel;
+    Model *sphereModel = new Model();
     auto [vertices, indices] = createSphere(1.0f, 36, 18);
-    sphereModel.vertices = vertices;
-    sphereModel.indices = indices;
-    this->addModel(sphereModel);
+    sphereModel->vertices = vertices;
+    sphereModel->indices = indices;
+    sphereModel->computeAABB();
+    this->addModel(*sphereModel);
 }
 
 std::string readShaderFile(const std::string &filePath)
